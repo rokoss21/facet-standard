@@ -203,27 +203,40 @@ In future retrospectives this should read as obvious:
 ### Reference Compiler (Rust)
 
 * **Compiler:** [https://github.com/rokoss21/facet-compiler](https://github.com/rokoss21/facet-compiler)
-* **Specification (FACET v2.0 CR-1):** [https://github.com/rokoss21/facet-compiler/blob/master/facet2-specification.md](https://github.com/rokoss21/facet-compiler/blob/master/facet2-specification.md)
+* **Specification (FACET v2.0 CR-1): [`./SPECIFICATION.md`](./SPECIFICATION.md)
 
 This repository is intended as the **front door** for:
 
 * the “Deterministic Contract Layer” concept
-* long-term positioning and attribution (“since 2025”)
-* links to spec + reference compiler
+* long-term positioning and attribution (**“since 2025”**)
+* the FACET manifesto, rationale, and specification
+* links to the reference compiler
 * future adapters/plugins (“vendor SDK extensions”)
 
 ---
 
 ## Suggested repo roadmap (so it ages well)
 
-### 1) `docs/`
+### 1) Core documents
 
-* `docs/contract-layer.md` — what belongs in the “layer”
+* `MANIFESTO.md` — vision, axioms, and positioning of FACET
+* `RATIONALE.md` — historical and technical rationale behind FACET’s design
+* `SPECIFICATION.md` — FACET v2.0 Language Specification (CR-1)
+
+### 2) `docs/`
+
+* `docs/contract-layer.md` — what belongs in the “Deterministic Contract Layer”
 * `docs/tool-calling-failure-modes.md` — taxonomy of real failures (by provider)
 * `docs/token-box-model.md` — context algebra in a practical form
 * `docs/reproducibility.md` — replay, caching, canonical JSON
+* `docs/canonical-json.md` — Canonical JSON as IR
+* `docs/adapter-requirements.md` — normative rules for adapters
+* `docs/adapters-philosophy.md` — adapter worldview and boundaries
+* `docs/facet-vs-existing-approaches.md` — comparative analysis
+* `docs/compliance-levels.md` — conformance tiers
+* `docs/glossary.md` — shared terminology
 
-### 2) `examples/`
+### 3) `examples/`
 
 * `examples/tool_contracts/` — minimal facet docs for tools
 * `examples/token_box/` — deterministic packing demos
@@ -248,7 +261,6 @@ Website: [https://rokoss21.tech](https://rokoss21.tech)
 
 GitHub: [https://github.com/rokoss21](https://github.com/rokoss21)
 
-
 > “When it finally became urgent, the solution was already written.”
 
 ---
@@ -260,5 +272,3 @@ FACET is released under the **MIT License**.
 The reference compiler, specification, and all accompanying materials in this repository are provided under the terms of the MIT License, allowing free use, modification, distribution, and commercial adoption with proper attribution.
 
 See the [`LICENSE`](./LICENSE) file for full license text.
-
-
