@@ -207,14 +207,29 @@ Operationally, this reduces the “unknown unknowns” that appear at scale.
 
 ---
 
+## Policy / Authorization as a Contract Domain
+
+Most stacks have no formal authorization layer for tool invocations. Tools are either exposed or not — there is no runtime enforcement of *which* tools may be called, by *whom*, under *what conditions*.
+
+FACET introduces `@policy` as a first-class contract domain:
+
+* **declarative rules** — allow/deny by operation kind, tool name, effect class, and runtime conditions
+* **effect classes** — formal labels (`read`, `write`, `payment`, `network`, ...) that make operation sensitivity explicit and policy-matchable
+* **fail-closed Runtime Guard** — if a policy decision cannot be proven ALLOW, the operation is DENY; the guard fires *before* any external call
+* **Execution Artifact + hash-chain** — cryptographic, tamper-evident audit trail of every guarded decision
+
+This makes FACET the first AI execution standard where tool authorization is not a middleware convention but a **compiled, auditable contract**.
+
+---
+
 ## Canonical JSON as IR
 
 FACET’s Canonical JSON is the IR that makes everything else possible:
 
 * **Diffability:** stable diffs between runs
-* **Hashing:** stable cache keys
+* **Hashing:** stable cache keys including `policy_hash` and `policy_version`
 * **Replays:** deterministic reproduction of incidents
-* **Audits:** exact historical payload reconstruction
+* **Audits:** exact historical payload reconstruction + Execution Artifact hash-chain
 * **Vendor switching:** adapters render provider payloads as views
 
 In compiler terms:

@@ -32,7 +32,9 @@ The Token Box Model addresses this by making **context layout explicit, typed, a
 
 ## Core Concept
 
-The context is treated as a **finite-capacity container** with a fixed token budget.
+The context is treated as a **finite-capacity container** with a fixed budget measured in **FACET Units**.
+
+A FACET Unit is defined as the byte length of the UTF-8 encoding of the NFC+LF normalized string. This is a provider-independent unit — provider token counts are telemetry only and do not affect normative layout.
 
 Each logical block of prompt data is represented as a **Section** with explicit layout constraints.
 
@@ -44,14 +46,14 @@ The compiler is responsible for fitting all sections into the available budget *
 
 Each Section has the following properties:
 
-| Field       | Type         | Description                             |
-| ----------- | ------------ | --------------------------------------- |
-| `priority`  | int          | Removal order (lower = dropped earlier) |
-| `base_size` | int          | Token count after render                |
-| `min`       | int          | Minimum guaranteed size                 |
-| `grow`      | float        | Weight for expansion                    |
-| `shrink`    | float        | Weight for compression                  |
-| `strategy`  | LensPipeline | Compression strategy                    |
+| Field       | Type         | Description                                        |
+| ----------- | ------------ | -------------------------------------------------- |
+| `priority`  | int          | Removal order (lower = dropped earlier)            |
+| `base_size` | int          | Size in FACET Units after render                   |
+| `min`       | int          | Minimum guaranteed size in FACET Units             |
+| `grow`      | float        | Weight for expansion                               |
+| `shrink`    | float        | Weight for compression                             |
+| `strategy`  | LensPipeline | Compression strategy (Level-0 only in Pure Mode)   |
 
 ### Critical Sections
 
@@ -92,7 +94,7 @@ If:
 FixedLoad > B
 ```
 
-→ **FAIL** with `ContextCriticalOverflow`
+→ **FAIL** with `F901` (Critical overflow)
 
 ---
 
@@ -125,7 +127,10 @@ If total size exceeds budget:
 ```
 Deficit = total_size - B
 Flexible = { i | shrink[i] > 0 }
-Sort Flexible by (priority ASC, shrink DESC)
+Sort Flexible by:
+  1. priority ASC
+  2. shrink DESC
+  3. original section order ASC (stable tie-break)
 ```
 
 For each section:
@@ -206,6 +211,6 @@ The Token Box Model makes that resource explicit, bounded, and deterministic.
 
 ## Status
 
-This document defines the **normative Token Box Model** for FACET v2.0 and later.
+This document defines the **normative Token Box Model** for FACET v2.1.3 and later.
 
 All compliant implementations MUST follow this algorithm when performing context layout.

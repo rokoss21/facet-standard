@@ -53,6 +53,7 @@ A FACET execution is reproducible **if and only if** all of the following are id
 * execution mode (Pure)
 * lens registry and versions
 * compiler version
+* `policy_version` (version of `@policy` DSL and guard evaluation semantics)
 
 Under these conditions:
 
@@ -67,13 +68,14 @@ This is a **hard guarantee**, not a best-effort promise.
 
 ## Deterministic Execution Stack
 
-Reproducibility emerges from the interaction of five enforced layers:
+Reproducibility emerges from the interaction of six enforced layers:
 
 1. **Typed AST** — no ambiguous values
-2. **Reactive DAG (R-DAG)** — fixed execution order
-3. **Token Box Model** — deterministic context packing
-4. **Canonical JSON** — stable intermediate representation
-5. **Provider Adapters** — isolated, stateless renderers
+2. **Reactive DAG (R-DAG)** — fixed evaluation order by merged ordered-map insertion position
+3. **Token Box Model** — deterministic context packing in FACET Units
+4. **Runtime Guard** — deterministic policy enforcement; every guarded operation is logged as a `GuardDecision` event
+5. **Canonical JSON** — stable intermediate representation including `policy_hash` and `policy_version`
+6. **Provider Adapters** — isolated, stateless renderers
 
 If any layer fails to produce a valid deterministic output, execution **aborts**.
 
@@ -99,6 +101,20 @@ This enables:
 * cross-provider migration
 
 Canonical JSON decouples **execution truth** from **provider behavior**.
+
+## Execution Artifact as the Audit Record
+
+For Hypervisor runs, the **Execution Artifact** extends reproducibility into the governance layer.
+
+It captures:
+
+* every guarded operation and its policy decision (`GuardDecision`)
+* a cryptographic hash-chain over all decisions (`provenance.hash_chain`)
+* an optional digital signature (`attestation`)
+
+The hash-chain seed includes `facet_version`, `host_profile_id`, `document_hash`, `policy_hash`, `policy_version`, `profile`, and `mode`. This makes the chain unique to the specific execution configuration — it cannot be confused with a chain from a different policy version or mode even if the document is identical.
+
+The Execution Artifact enables **tamper-evident audit trails** for regulated environments.
 
 ---
 
@@ -163,6 +179,6 @@ FACET enforces reproducibility by turning AI execution into a **compiled, replay
 
 ## Status
 
-This document defines the **normative reproducibility guarantees** for FACET v2.0 Hypervisor Profile.
+This document defines the **normative reproducibility guarantees** for FACET v2.1.3 Hypervisor Profile.
 
 All compliant implementations MUST uphold these guarantees in Pure Mode execution.

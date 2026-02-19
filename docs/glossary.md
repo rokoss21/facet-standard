@@ -61,7 +61,7 @@ FACET implements a contract layer via:
 
 **NADL** — A declarative language used to describe AI system architecture, behavior, and constraints.
 
-FACET v2.0 is a NADL.
+FACET is a NADL.
 
 ---
 
@@ -121,8 +121,9 @@ Interfaces specify:
 * function name
 * parameters
 * return type
+* `effect` attribute — the capability/effect class of the function (e.g. `read`, `write`, `payment`)
 
-Interfaces compile into provider-specific tool schemas.
+Interfaces compile into provider-specific tool schemas. Every function MUST declare an `effect`.
 
 ---
 
@@ -200,9 +201,111 @@ Pure Mode outputs are canonical.
 
 ## Execution Mode
 
-**Execution Mode** — A permissive mode allowing volatile lenses and external side effects.
+**Execution Mode** — A permissive mode allowing volatile lenses and external side effects, subject to Runtime Guard enforcement.
 
-Execution Mode outputs are not canonical.
+In Execution Mode, Level-1 and Level-2 lenses may execute if permitted by `@policy`. All guarded operations still require a Guard ALLOW decision.
+
+---
+
+## Policy (`@policy`)
+
+**`@policy`** — A declarative authorization model that governs which operations (tool calls, lens calls, tool exposure, message emission) are permitted at runtime.
+
+`@policy` defines `allow` and `deny` rule lists. The Runtime Guard enforces these rules in fail-closed mode.
+
+---
+
+## Effect Class
+
+**Effect Class** — A string label attached to an `@interface` function or lens registry entry that categorizes the operation's nature.
+
+Standard effect classes: `read`, `write`, `external`, `payment`, `filesystem`, `network`.
+
+Effect classes are part of the policy matching contract. `read` is the only class treated as non-mutating.
+
+---
+
+## Runtime Guard
+
+**Runtime Guard** — A mandatory, fail-closed enforcement mechanism in the Hypervisor profile.
+
+The Guard evaluates `@policy` rules before any guarded operation is initiated. If the Guard cannot prove ALLOW, it MUST deny. Every Guard decision is recorded as a `GuardDecision` event.
+
+---
+
+## GuardDecision
+
+**GuardDecision** — An event record produced by the Runtime Guard for every guarded operation attempt (including denied ones).
+
+Each `GuardDecision` includes: operation kind, name, effect class, mode, decision (`allowed`/`denied`), matching rule id, and a cryptographic `input_hash`.
+
+---
+
+## Execution Artifact
+
+**Execution Artifact** — An audit/provenance record emitted by a Hypervisor `run` or `test`.
+
+It is separate from Canonical JSON. It contains:
+
+* metadata (facet_version, host_profile_id, document_hash, policy_hash, policy_version)
+* `provenance.events`: ordered list of `GuardDecision` records
+* `provenance.hash_chain`: cryptographic hash-chain over all events
+* optional `attestation`: digital signature over the hash-chain head
+
+---
+
+## OpDesc (Operation Descriptor)
+
+**OpDesc** — An internal descriptor constructed by the Runtime Guard for every policy decision.
+
+OpDesc contains:
+
+* `op` — operation kind (`tool_call`, `lens_call`, `tool_expose`, `message_emit`)
+* `name` — canonical identifier of the operation (case-sensitive, no whitespace)
+* `effect_class` — string effect class or `null`
+* `mode` — `"pure"` or `"exec"`
+* `profile` — `"core"` or `"hypervisor"`
+
+OpDesc is an internal entity; its externally testable representation is `GuardDecision` (Appendix F).
+
+---
+
+## Effective Policy Object
+
+**Effective Policy Object** — The fully merged and validated `@policy` map produced after Phase 1 merge and Phase 2 validation, with all `allow`/`deny` lists in their final merged order.
+
+Used for computing `metadata.policy_hash` (hashed as `JCS({ policy_version, policy: EffectivePolicyObject })`) and is immutable for the remainder of execution.
+
+---
+
+## Testing (`@test`)
+
+**`@test`** — A repeatable-block facet defining test cases for FACET documents (Hypervisor required).
+
+Each `@test` block may:
+
+* override `@vars` values
+* supply `@input` runtime values
+* mock interface function calls
+* assert on `canonical`, `telemetry`, and `execution` (Execution Artifact)
+
+Tests run in an isolated environment and verify determinism, type correctness, and policy enforcement.
+
+---
+
+## policy_version
+
+**`policy_version`** — A string identifier for the revision of the `@policy` DSL and guard evaluation semantics.
+
+`policy_version` is included in `metadata.policy_hash` and in the Execution Artifact hash-chain seed. For FACET v2.1.3, `policy_version` is `"1"`.
+
+---
+
+## FACET Units
+
+**FACET Units** — The normative budget unit for Token Box Model layout.
+
+Defined as the byte length of the UTF-8 encoding of the NFC+LF normalized string. Provider token counts are telemetry only and do not affect layout.
 
 ---
 

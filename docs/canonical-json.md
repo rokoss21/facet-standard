@@ -51,22 +51,35 @@ FACET treats Canonical JSON as a **compiled artifact**, not a serialization conv
 
 ## Canonical Ordering Rules
 
-FACET enforces a strict top-level ordering:
+FACET v2.1.3 defines a fixed top-level structure with three keys in this order:
 
-1. `meta`
-2. `system`
-3. `tools`
-4. `examples`
-5. `history`
-6. `user`
-7. `assistant`
-8. `output`
+1. `metadata` — execution provenance object (see below)
+2. `tools` — list of canonical tool schemas derived from `@interface` declarations, in source order
+3. `messages` — ordered list of `{ role, content }` objects
+
+### `metadata` fields (in normative order)
+
+| Field | Type | Description |
+|---|---|---|
+| `facet_version` | string | FACET spec version (e.g. `"2.1.3"`) |
+| `profile` | string | `"core"` or `"hypervisor"` |
+| `mode` | string | `"pure"` or `"exec"` |
+| `host_profile_id` | string | Host profile identifier (versioned) |
+| `document_hash` | string | sha256 of Resolved Source Form |
+| `policy_hash` | string \| null | sha256 of Effective Policy Object (includes `policy_version`) |
+| `policy_version` | string | Version of the `@policy` DSL semantics (`"1"` for v2.1.3) |
+| `budget_units` | int | Effective budget in FACET Units |
+| `target_provider_id` | string | Provider target identifier |
+
+### Message ordering
+
+All `@system` blocks appear first (in source order), then all `@user` blocks, then all `@assistant` blocks. Within each role, relative source order is preserved.
 
 This ordering is **normative** and MUST be preserved by all compliant implementations.
 
 Nested objects follow:
 
-* lexical key ordering (UTF-8, codepoint order)
+* RFC 8785 (JCS) key ordering — lexicographic by Unicode code point
 * stable list ordering derived from execution order or explicit keys
 
 ---
@@ -310,8 +323,16 @@ Once this layer exists, provider payloads become replaceable implementation deta
 
 ---
 
+## Execution Artifact — a separate provenance record
+
+In addition to Canonical JSON, a Hypervisor `run` or `test` MAY emit an **Execution Artifact** — a distinct JSON record that captures the audit trail of all guarded operations (`tool_call`, `lens_call`, `tool_expose`, `message_emit`) with their policy decisions, a cryptographic hash-chain over those decisions, and an optional attestation signature.
+
+The Execution Artifact is NOT part of Canonical JSON. It is the **provenance layer** over execution, separate from the request context record. Both together form the full audit record of a FACET execution.
+
+---
+
 ## Status
 
-This document defines the **normative Canonical JSON Model** for FACET v2.0 and later.
+This document defines the **normative Canonical JSON Model** for FACET v2.1.3 and later.
 
 All compliant implementations MUST follow these rules when producing canonical execution output.

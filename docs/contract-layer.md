@@ -60,7 +60,7 @@ This mirrors how compilers reject invalid programs *before* execution.
 
 ## 3. What the Contract Layer Governs
 
-A proper contract layer governs **five distinct domains**.
+A proper contract layer governs **six distinct domains**.
 
 ### 3.1 Types
 
@@ -155,6 +155,27 @@ Without canonicalization, systems cannot be reasoned about reliably.
 
 ---
 
+### 3.6 Authorization (Policy Enforcement)
+
+A contract layer must define **what operations are permitted to execute** and enforce that boundary before execution, not after.
+
+Without an authorization layer:
+
+* tools can be invoked regardless of scope or sensitivity
+* payment, filesystem, or network operations can trigger without policy approval
+* there is no formal record of which operations were authorized
+
+A contract layer enforces authorization via:
+
+* declarative policy rules (`@policy` — allow/deny by operation, name, effect class)
+* fail-closed runtime guard — if a decision cannot be proven ALLOW, it is DENY
+* effect classes — formal classification of operation sensitivity (`read`, `write`, `payment`, `network`, ...)
+* tamper-evident audit trail — cryptographic record of every guarded operation decision
+
+Authorization is not a middleware concern. It is a **pre-execution contract** that must be checked before any side-effecting operation begins.
+
+---
+
 ## 4. What a Contract Layer Is *Not*
 
 A contract layer is explicitly **not**:
@@ -220,11 +241,13 @@ It is an architectural omission.
 FACET formalizes a contract layer by combining:
 
 * a strict type system (FTS)
-* explicit interfaces (`@interface`)
+* explicit interfaces (`@interface`) with mandatory effect declarations
 * deterministic execution phases
 * a reactive dependency graph (R-DAG)
 * a formal context allocation algorithm (Token Box Model)
-* canonical JSON rendering
+* declarative policy / authorization model (`@policy`) with fail-closed Runtime Guard
+* canonical JSON rendering with policy provenance (`policy_hash`, `policy_version`)
+* tamper-evident Execution Artifact with hash-chain
 
 FACET is **one implementation** of a contract layer.
 

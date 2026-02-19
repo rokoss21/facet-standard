@@ -8,6 +8,19 @@ A technical standard + reference compiler that treats AI behavior like **compile
 
 ---
 
+## Specification versions
+
+| Version | Status | Document |
+|---------|--------|----------|
+| **v2.1.3** | ✅ Recommendation (REC-PROD) — **current** | [`SPECIFICATION.md`](./SPECIFICATION.md) |
+| v2.1.2 | Recommendation (REC-PROD) | [`archive/facet-v2.1.2.md`](./archive/facet-v2.1.2.md) |
+| v2.0 CR-1 | Candidate Recommendation | [`archive/facet-v2.0-cr1.md`](./archive/facet-v2.0-cr1.md) |
+| v1.1 draft r3 | Archive | [`archive/facet-v1.1-draft-r3.md`](./archive/facet-v1.1-draft-r3.md) |
+
+**v2.1.3** is the current production standard. It introduces a complete Policy / Authorization Model (`@policy`), capability/effect classes, a fail-closed Runtime Guard, provenance artifact with hash-chain, and policy semantics versioning (`policy_version`).
+
+---
+
 ## Why this matters
 
 LLM systems failed for the same reason repeatedly:
@@ -32,7 +45,7 @@ Most stacks “solve” this with:
 
 ## What is FACET?
 
-FACET v2.0 is a **Neural Architecture Description Language (NADL)** and contract system that:
+FACET is a **Neural Architecture Description Language (NADL)** and contract system that:
 
 * parses a `.facet` document into a strict **AST**
 * performs compile-time checks via a strict **Facet Type System (FTS)**
@@ -203,7 +216,8 @@ In future retrospectives this should read as obvious:
 ### Reference Compiler (Rust)
 
 * **Compiler:** [https://github.com/rokoss21/facet-compiler](https://github.com/rokoss21/facet-compiler)
-* **Specification (FACET v2.0 CR-1): [`./SPECIFICATION.md`](./SPECIFICATION.md)
+* **Specification (current — FACET v2.1.3 REC-PROD):** [`./SPECIFICATION.md`](./SPECIFICATION.md)
+* **Previous versions:** [`./archive/`](./archive/)
 
 This repository is intended as the **front door** for:
 
@@ -221,7 +235,9 @@ This repository is intended as the **front door** for:
 
 * `MANIFESTO.md` — vision, axioms, and positioning of FACET
 * `RATIONALE.md` — historical and technical rationale behind FACET’s design
-* `SPECIFICATION.md` — FACET v2.0 Language Specification (CR-1)
+* `SPECIFICATION.md` — FACET v2.1.3 Language Specification (REC-PROD, **current**)
+* `archive/facet-v2.1.2.md` — FACET v2.1.2 Language Specification (REC-PROD)
+* `archive/facet-v2.0-cr1.md` — FACET v2.0 Language Specification (CR-1)
 
 ### 2) `docs/`
 

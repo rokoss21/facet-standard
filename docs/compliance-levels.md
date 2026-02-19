@@ -4,7 +4,7 @@
 
 This document defines **compliance levels** for FACET-related implementations.
 
-While the FACET v2.0 specification defines what is *correct*, compliance levels define **how completely** a given component (compiler, adapter, runtime, SDK integration) adheres to the FACET contract model.
+While the FACET v2.1.3 specification defines what is *correct*, compliance levels define **how completely** a given component (compiler, adapter, runtime, SDK integration) adheres to the FACET contract model.
 
 This allows the ecosystem to:
 
@@ -123,8 +123,9 @@ The implementation:
 
 * strict Facet Type System (FTS)
 * deterministic R-DAG execution
-* deterministic Token Box Model layout
-* canonical JSON as the single source of truth
+* deterministic Token Box Model layout (FACET Units)
+* canonical JSON as the single source of truth including `policy_hash` and `policy_version`
+* `@policy` enforcement with Runtime Guard (fail-closed)
 * no retries as a correctness mechanism
 
 ### Guarantees
@@ -133,6 +134,7 @@ The implementation:
 * stable hashing
 * replayable executions
 * deterministic failure modes
+* authorized tool/lens invocations only (policy-enforced)
 
 ### Allowed Claims
 
@@ -150,16 +152,18 @@ The implementation:
 
 The implementation:
 
-* satisfies **all** FACET v2.0 normative requirements
+* satisfies **all** FACET v2.1.3 normative requirements
 * passes the official FACET golden test suite
 * is suitable as a **reference implementation**
 
 ### Required Properties
 
-* full spec coverage (all execution phases)
+* full spec coverage (all execution phases 1–5)
 * golden tests with published fixtures
 * strict adapter requirements
 * hermetic execution guarantees
+* `@policy` + Runtime Guard + Execution Artifact with hash-chain
+* `policy_version` emitted in canonical metadata and Execution Artifact
 * documented versioning and change history
 
 ### Privileges
