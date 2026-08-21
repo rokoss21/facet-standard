@@ -98,51 +98,97 @@ This is the difference between:
 
 ## Minimal FACET example
 
-A deterministic tool-calling contract with typed inputs and canonical output.
+A deterministic tool-calling contract: typed runtime inputs, a policy-guarded tool, and
+explicit context layout. This example is verified against the reference compiler
+(`facet-fct build` / `run`, v2.1.3).
 
 ```facet
-@system
-  description: "Deterministic payment orchestration"
-  tools: [$Payments]
+@context
+  budget: 8000
+  defaults: { priority: 500, min: 0, grow: 0, shrink: 1 }
+
+@var_types
+  request: "string"
+  currency: "string"
+  customer_verified: "bool"
 
 @vars
-  amount:   @input(type="float", min=0.01)
-  currency: @input(type="string", enum=["USD","EUR","GBP"])
-  result:   $Payments.charge(amount=amount, currency=currency)
-
-@output
-  schema:
-    type: "object"
-    required: ["transaction_id", "status"]
-    properties:
-      transaction_id: { type: "string" }
-      status:         { type: "string", enum: ["success","failed"] }
+  request:           @input(type="string")
+  currency:          @input(type="string", default="USD")
+  customer_verified: @input(type="bool", default=false)
 
 @interface Payments
   fn charge(amount: float, currency: string) -> struct {
     transaction_id: string
     status: string
-  }
+  } (effect="payment")
 
-@context system
+@policy
+  allow: [
+    { id: "expose-charge", op: "tool_expose", name: "Payments.charge", effect: "payment" },
+    { id: "call-charge",   op: "tool_call",   name: "Payments.charge", effect: "payment" }
+  ]
+  deny: [
+    { id: "no-charge-unverified", op: "tool_call", name: "Payments.charge", unless: $customer_verified }
+  ]
+
+@system
+  id: "sys.rules"
   priority: 0
   min: 250
-  shrink: 0     # Critical section (cannot be dropped)
+  # Critical section: never compressed or dropped
+  shrink: 0
+  tools: [$Payments]
+  content: "Deterministic payment orchestration. Call Payments.charge exactly once."
 
-@context user
+@user
+  id: "user.request"
   priority: 500
-  min: 0
   shrink: 1
   grow: 1
+  content: $request
+```
+
+Run it:
+
+```bash
+facet-fct build --input payments.facet
+facet-fct run   --input payments.facet --runtime-input payments.input.json --exec
 ```
 
 What this buys you:
 
-* compile-time typing (FTS) for `amount`, `currency`, tool signature, and output
-* deterministic evaluation order via R-DAG
-* deterministic context allocation via Token Box Model
-* canonical tool schema rendering per provider (OpenAI/Anthropic/etc.)
-* output is either **valid** or the run fails **before** contaminating downstream state
+* compile-time typing (FTS) for runtime inputs and for the full tool signature (§8, §14)
+* deterministic evaluation order via R-DAG (§10.3)
+* deterministic context allocation via the Token Box Model — the system block is Critical
+  (`shrink: 0`) and cannot be dropped, whatever else has to give (§11)
+* canonical tool schema rendering per provider, derived from FTS via the normative
+  JSON Schema mapping (Appendix D)
+* fail-closed authorization: `Payments.charge` is `effect="payment"` and is denied unless
+  `customer_verified` is true — the guard decides **before** the call is initiated (§16)
+* a stable `document_hash` and `policy_hash` in canonical metadata, so a contract change
+  is a visible, diffable event (§18)
+
+### Syntax notes that trip people up
+
+FACET is YAML-lite, not a C-family language. The most common mistakes:
+
+* indentation is **exactly 2 spaces**; a tab raises `F002`
+* comments are whole-line `#`; there are no trailing comments, no `//`, no `;`
+* braces are only inline literals (`{ retries: 3 }`, `["a", "b"]`) — there are no code blocks
+* `@import "./file.facet"` imports a whole file; there are no named imports
+* there is no control flow: no loops, no `if`, no assignment, no string concatenation, no
+  arithmetic. `@vars` values are literals, `$` references, `@input(...)` and lens pipelines,
+  nothing else (§14.1). The only branch in the language is the boolean gate `when=` (§12.6)
+* `@interface` declares **tools**, not data structures; every `fn` MUST declare `effect=`
+  (missing effect → `F456`). Data shapes live in `@var_types` as FTS types
+* the model is never called by FACET. `run` emits Canonical JSON; your host calls the
+  provider and owns retries, storage, and side effects
+* loops and state machines belong to the host: one `run` = one deterministic request.
+  Mutable state enters through `@input`
+
+The full facet set in v2.1.3 is `@meta @import @context @system @user @assistant @vars
+@var_types @interface @policy @test`. Anything else is not FACET.
 
 ---
 
@@ -258,7 +304,7 @@ This repository is intended as the **front door** for:
 * `examples/token_box/` — deterministic packing demos
 * `examples/rdag/` — variable dependency examples
 
-### 3) `adapters/` (optional; future)
+### 4) `adapters/` (optional; future)
 
 * `adapters/openai-python/`
 * `adapters/anthropic-python/`
