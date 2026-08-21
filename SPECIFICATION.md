@@ -294,6 +294,14 @@ Rules:
 
 Imports MUST be applied in source order: imported content is expanded in-place at the point the `@import` appears, forming a single Resolved Source Form and a single Resolved AST.
 
+Expansion MUST be byte-exact, because `metadata.document_hash` is the SHA-256 of the Resolved Source Form (§18.3) and therefore the identity of the contract:
+
+- The line containing the `@import` directive MUST be replaced by the imported document's own Resolved Source Form.
+- The substituted content MUST end with exactly one `\n`, regardless of whether the imported file ended with none, one, or several. Without this rule an imported file that does not end in a newline would join its last line to the text that follows it.
+- No other separator, blank line, or marker MUST be introduced around the substituted content.
+
+Two conforming implementations MUST therefore produce the same `document_hash` for the same set of files.
+
 ### 7.3 Standard facet cardinality (Normative)
 
 Standard facets have fixed cardinality:
@@ -1342,6 +1350,10 @@ If an Execution Artifact is produced during `run` or `test`, it SHOULD be emitte
 ---
 
 ## 21. Change History
+
+### v2.1.3 (rev. 2026-08-22 — targeted normative clarification)
+
+- **§7.2** — Pinned the byte-level result of import expansion: the `@import` line is replaced by the imported document's Resolved Source Form with exactly one trailing `\n` and no other separator. `document_hash` is the SHA-256 of that form (§18.3), so leaving the splice underspecified allowed two conforming implementations to produce different identities for the same contract — observed between the reference compiler and an independent Core implementation.
 
 ### v2.1.3 (rev. 2026-08-21 — targeted normative clarification)
 
