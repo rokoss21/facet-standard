@@ -590,13 +590,23 @@ Let `B` be budget in FACET Units and `size[i] = facet_units(content[i])`.
   2. `shrink` descending
   3. original section order ascending
 
+For each flexible section, define the **effective minimum**:
+
+```
+effective_min[i] = min(min[i], size[i])
+```
+
+`min` is a floor on *retained* content. A declared `min` greater than the section's own
+size MUST NOT make the section unshrinkable or undroppable, and MUST NOT permit the
+packed layout to exceed `B`.
+
 Iterate `Flex` in that order while total size > B:
 
 - If `strategy` is set: apply strategy to `content[i]` (Pure Mode: Level‑0 only; else `F801`)
 - Recompute `size[i]` and total
-- If still over budget: truncate deterministically from the end down to satisfy budget but not below `min`
+- If still over budget: truncate deterministically from the end down to satisfy budget but not below `effective_min[i]`
   - truncation MUST NOT split UTF‑8 sequences
-- If still over budget and `size[i] == min`: drop the entire section (unless Critical)
+- If still over budget and `size[i] <= effective_min[i]`: drop the entire section (unless Critical)
 
 Result MUST be deterministic across implementations.
 
@@ -1332,6 +1342,10 @@ If an Execution Artifact is produced during `run` or `test`, it SHOULD be emitte
 ---
 
 ## 21. Change History
+
+### v2.1.3 (rev. 2026-08-21 — targeted normative clarification)
+
+- **§11.3** — Defined `effective_min[i] = min(min[i], size[i])` for flexible sections. Previously a `min` larger than the section's own content satisfied neither the truncation condition (`size[i] > min`) nor the drop condition (`size[i] == min`), so a conforming implementation could terminate with a packed layout exceeding `B` — contradicting the resource bound the model exists to provide.
 
 ### v2.1.3 (rev. 2026-02-19 — targeted normative clarifications)
 
